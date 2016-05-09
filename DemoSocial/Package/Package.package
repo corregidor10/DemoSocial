@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package dslVersion="1.0.0.0" 
+        Id="23a43ede-46bb-4f5d-8860-cd65194f6bc9" 
+        solutionId="23a43ede-46bb-4f5d-8860-cd65194f6bc9" 
+        xmlns="http://schemas.microsoft.com/VisualStudio/2008/SharePointTools/PackageModel" 
+        name="DemoSocial"
+        sharePointProductVersion="16.0">
+  <features>
+        <featureReference itemId="1b61d97e-21eb-43f2-98cf-80d51c9a3b5b" />
+  </features>
+</package>
