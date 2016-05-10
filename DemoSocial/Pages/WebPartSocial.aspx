@@ -12,9 +12,8 @@
 
     <script type="text/javascript" src="../Scripts/jquery-1.9.1.min.js"></script>
     <script type="text/javascript" src="/_layouts/15/MicrosoftAjax.js"></script>
-      <script type="text/javascript" src="/_layouts/15/sp.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.runtime.js"></script>
-  
+    <script type="text/javascript" src="/_layouts/15/sp.js"></script>
 
     <script type="text/javascript">
         // Set the style of the client web part page to be consistent with the host web.
@@ -44,7 +43,6 @@
     <script type="text/javascript" src="/_layouts/15/init.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.userprofiles.js"></script>
     <script type="text/javascript" src="/_layouts/15/sp.search.debug.js"></script>
-       
     <script type="text/javascript" src="../Scripts/App.js"></script>
 </head>
 <body>
@@ -52,7 +50,7 @@
     <div>
         <textarea id="mensaje"></textarea>
         <button type="button" id="enviar" value="Dale"></button>
-        <div id="posts" style="background-color: darkgrey; min-width: 500px; min-height: 500px"></div>
+        <div id="posts" style="background-color: darkgrey; min-width: 500px; min-height: 500px; color: red"></div>
 
     </div>
 

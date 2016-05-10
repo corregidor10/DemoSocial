@@ -13,7 +13,7 @@ function getQueryStringParameters(requestedParameter) {
     for (var i = 0; i < param.LENGTH; i++) {
         var actual = param[i].split("=");
 
-        if (actual[0] === requestedParameter) {
+        if (actual[0] == requestedParameter) {
             return actual[1];
         }
 
@@ -27,12 +27,14 @@ var appWebUrl = decodeURIComponent(getQueryStringParameters("SPAppWebUrl"));
 
 var hostWebUrl = decodeURIComponent(getQueryStringParameters("SPHostUrl"));
 
-var clientContext = new  SP.ClientContext.get_current();
+var clientContext = new SP.ClientContext.get_current();
 
 var hostContext = SP.AppContextSite(clientContext, hostWebUrl);
 
 
 var formDigest = "";//necesito el formDigest para las operaciones de escritura
+
+
 
 var getFormDigest = function () {
     $.ajax({
@@ -43,12 +45,9 @@ var getFormDigest = function () {
         success: function (data) {
             formDigest = data.d.GetContextWebInformation.FormDigestValue;
         },
-
         error: function (xhr) {
-
             alert(xhr.responseText);
-
-        },
+            },
         async: false
 
     });
@@ -57,15 +56,13 @@ var getFormDigest = function () {
 
 var getActorInfo = function (cuenta) {
     var actor = "";
-
+    //Necesitamos recuperar el nombre de cuenta, si tiene tuberías (office 365)cojo la 2posicion del array
     if (cuenta.indexOf("|") >= 0) {
         cuenta = cuenta.split("|")[2];
     }
     $.ajax({
-        url: appWebUrl + "/_api/social.feed/actor(item='" + cuenta + "'",
-        //type: "GET",
-        //contentType: "application/json; odata=verbose",
-        headers: { 'accept': 'application/json; odata=verbose' },
+        url: appWebUrl + "/_api/social.feed/actor(item='" + cuenta + "')",
+      headers: { 'accept': 'application/json; odata=verbose' },
         success: function (data) {
             actor = data.d.FollowableItemActor;
 
@@ -89,8 +86,6 @@ var getSiteFeed = function () {
 
     $.ajax({
         url: appWebUrl + "/_api/social.feed/actor(item=@v)/feed?@v='" + hostWebUrl + "/newsfeed.aspx'",
-        //type: "GET",
-        //contentType: "application/json; odata=verbose",
         headers: { 'accept': 'application/json; odata=verbose' },
         success: function (data) {
             feed = getFeeds(data);
@@ -107,11 +102,13 @@ var getSiteFeed = function () {
 
 
 function getFeeds(data) {
+
+    // recupero los post del array y los ordeno de mas reciente a mas antiguo
     posts = data.d.SocialFeed.Threads.results.reverse();
-    var query =
-        "(ContentTypeId:0x01FD4FB0210AB50249908EAA47E6BD3CFE8B* " +
-            "OR ContentTypeId:0x01FD59A0DF25F1E14AB882D2C87D4874CF84* OR ContentTypeId:0x012002* " +
-            "OR ContentTypeId:0x0107* OR WebTemplate=COMMUNITY)";//owstaxIdMetadataAllTagsInfo:" + projectSiteCode; 
+    var query = "(ContentTypeId:0x01FD4FB0210AB50249908EAA47E6BD3CFE8B* OR " +
+       "ContentTypeId:0x01FD59A0DF25F1E14AB882D2C87D4874CF84* OR " +
+       "ContentTypeId:0x012002* OR ContentTypeId:0x0107* OR " +
+       "WebTemplate=COMMUNITY)";
 
     var keyWordQuery = new Microsoft.SharePoint.Client.Search.Query.KeywordQuery(clientContext);
 
@@ -150,19 +147,19 @@ var updateDisplay = function () {
     var autor;
 
 
-    while (posts.length !== 0 || resultados.length !== 0) {
-        if (posts.length === 0) {
+    while (posts.length != 0 || resultados.length != 0) {
+        if (posts.length == 0) {
             postB = resultados[resultados.length - 1];
             autor = getActorInfo(postB.PostAuthor);
             contenido += addToFeed(autor, postB.FullPostBody, postB.Created);
             resultados.pop();
 
         }
-        else if (resultados.length === 0) {
+        else if (resultados.length == 0) {
             post = posts[posts.length - 1].RootPost;
-            autor = posts[posts.length - 1].Actors.results[post.AuthorIndex];
+            autor = posts[posts.length - 1].Actors.results[post.Author];
 
-            contenido += addToFeed(autor, post.FullPostBody, new Date(post.CreatedTime));
+            contenido += addToFeed(autor, post.Text, new Date(post.CreatedTime));
 
             posts.pop();
         }
@@ -170,7 +167,7 @@ var updateDisplay = function () {
             postB = resultados[resultados.length - 1];
             post = posts[posts.length - 1].RootPost;
             if (new Date(post.CreatedTime) > postB.Created) {
-                autor = posts[posts.length - 1].Actors.results[post.AuthorIndex];
+                autor = posts[posts.length - 1].Actors.results[post.Author];
 
                 contenido += addToFeed(autor, post.FullPostBody, new Date(post.CreatedTime));
 
@@ -194,7 +191,7 @@ var updateDisplay = function () {
 
 function addToFeed(autor, texto, fecha) {
 
-    var contenido = "<li>" + autor.name + "<br/>" + texto + "<br/>" + fecha + "</li>";
+    var contenido = "<li>" + autor.Name + "<br/>" + texto + "<br/>" + fecha + "</li>";
 
     return contenido;
 
@@ -204,6 +201,35 @@ function addToFeed(autor, texto, fecha) {
 function sendPost() {
 
     var contenido = $("#mensaje").val();
+    contenido += " #PostApp";
+
+    var ca = contenido.split(" ");
+    var tagg = [];
+    var tc = 0;
+
+    $.each(ca,
+        function (i, data) {
+            if (data.indexOf("#") == 0) {
+                var t = new SP.Social.SocialDataItem();
+                t.ItemType = 3;
+                t.Text = data;
+                tagg.push(t);
+                ca[i] = "{" + tc + "}";
+                tc++;
+            }
+        });
+    contenido = "";
+
+    $.each(ca, function (i, data) {
+
+        if (i>0)
+        {
+            contenido += " ";
+        }
+
+        contenido += data;
+    });
+
 
 
     $.ajax({
@@ -212,14 +238,17 @@ function sendPost() {
         data: JSON.stringify({
             "restCreationData": {
                 "__metadata": {
-                    "`type": "SP.Social.SocialRestPostCreationData"
+                    "type": "SP.Social.SocialRestPostCreationData"
                 },
                 "ID": null,
                 "creationData": {
-                    "__metadata": { "type": "SP.Social.SocialRestPostCreationData" },
+                    "__metadata": { "type": "SP.Social.SocialPostCreationData" },
+                    "ContentItems": {
+                        "results":tagg
+                    },
                     "ContentText": contenido,
                     "UpdateStatusText": false
-                },
+                }
             }
         }),
         headers: {
@@ -227,7 +256,7 @@ function sendPost() {
             "content-type": "application/json; odata=verbose",
             "X-RequestDigest": formDigest
         },
-        success: getFeeds,
+        success: getSiteFeed,
 
         error: function () {
             alert("Reventó");

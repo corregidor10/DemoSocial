@@ -16,8 +16,7 @@
   </AppPrincipal>
   <AppPermissionRequests>
     <AppPermissionRequest Scope="http://sharepoint/search" Right="QueryAsUserIgnoreAppPrincipal" />
-    <AppPermissionRequest Scope="http://sharepoint/social/microfeed" Right="FullControl" />
     <AppPermissionRequest Scope="http://sharepoint/content/tenant" Right="Write" />
-    <AppPermissionRequest Scope="http://sharepoint/social/tenant" Right="FullControl" />
+    <AppPermissionRequest Scope="http://sharepoint/social/tenant" Right="Read" />
   </AppPermissionRequests>
 </App>
